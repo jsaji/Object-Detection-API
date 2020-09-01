@@ -5,6 +5,11 @@ Yolov3 is an algorithm that uses deep convolutional neural networks to perform o
 
 ## Getting started
 
+Be sure to create a virtual environment for the project to separate dependencies from other Python projects. (Or don't, and live on the edge.)
+```
+python -m venv obj_detection_api
+```
+
 #### Conda (Recommended)
 
 ```bash
@@ -18,12 +23,15 @@ conda activate yolov3-gpu
 ```
 
 #### Pip
+
+(CPU version is recommended for now.)
+
 ```bash
 # TensorFlow CPU
-pip install -r requirements.txt
+pip install -r requirements.txt --use-feature=2020-resolver
 
 # TensorFlow GPU
-pip install -r requirements-gpu.txt
+pip install -r requirements-gpu.txt --use-feature=2020-resolver
 ```
 
 ### Nvidia Driver (For GPU, if you haven't set it up already)
