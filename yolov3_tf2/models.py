@@ -25,6 +25,7 @@ from .utils import broadcast_iou
 yolo_max_boxes = 100
 yolo_iou_threshold = 0.5
 yolo_score_threshold = 0.5
+num_classes = 80
 # customize your model through the following parameters
 flags.DEFINE_integer('yolo_max_boxes', 10, 'maximum number of detections at one time')
 flags.DEFINE_float('yolo_iou_threshold', 0.5, 'iou threshold')
@@ -205,7 +206,7 @@ def yolo_nms(outputs, anchors, masks, classes):
 
 
 def YoloV3(size=None, channels=3, anchors=yolo_anchors,
-           masks=yolo_anchor_masks, classes=80, training=False):
+           masks=yolo_anchor_masks, classes=num_classes, training=False):
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
     if len(physical_devices) > 0:
         tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -239,7 +240,7 @@ def YoloV3(size=None, channels=3, anchors=yolo_anchors,
 
 
 def YoloV3Tiny(size=None, channels=3, anchors=yolo_tiny_anchors,
-               masks=yolo_tiny_anchor_masks, classes=80, training=False):
+               masks=yolo_tiny_anchor_masks, classes=num_classes, training=False):
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
     if len(physical_devices) > 0:
         tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -265,7 +266,7 @@ def YoloV3Tiny(size=None, channels=3, anchors=yolo_tiny_anchors,
     return Model(inputs, outputs, name='yolov3_tiny')
 
 
-def YoloLoss(anchors, classes=80, ignore_thresh=0.5):
+def YoloLoss(anchors, classes=num_classes, ignore_thresh=0.5):
     def yolo_loss(y_true, y_pred):
         # 1. transform all pred outputs
         # y_pred: (batch_size, grid, grid, anchors, (x, y, w, h, obj, ...cls))
