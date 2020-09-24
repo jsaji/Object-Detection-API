@@ -46,65 +46,55 @@ app = Flask(__name__)
 @app.route('/detections', methods=['POST'])
 def get_detections():
     try:
-        raw_images = []
-        images = request.files.getlist("images")
-        image_names = []
-        for image in images:
-            image_name = image.filename
-            image_names.append(image_name)
-            image.save(os.path.join(os.getcwd(), image_name))
-            img_raw = tf.image.decode_image(
-                open(image_name, 'rb').read(), channels=3)
-            raw_images.append(img_raw)
+        image = request.files["image"]
+        image_name = image.filename
+        image.save(os.path.join(os.getcwd(), image_name))
+        raw_img = tf.image.decode_image(
+            open(image_name, 'rb').read(), channels=3)
             
         num = 0
         
-        # create list for final response
-        response = []
 
-        for j in range(len(raw_images)):
-            # create list of responses for current image
-            objects = []
-            raw_img = raw_images[j]
-            num+=1
-            img = tf.expand_dims(raw_img, 0)
-            original_size = img.shape[1:3]
-            img = transform_images(img, SIZE)
+        # create list of responses for current image
+        objects = []
+        img = tf.expand_dims(raw_img, 0)
+        original_size = img.shape[1:3]
+        img = transform_images(img, SIZE)
 
-            t1 = time.time()
-            boxes, scores, classes, nums = yolo(img)
-            t2 = time.time()
-            print('time: {}'.format(t2 - t1))
+        t1 = time.time()
+        boxes, scores, classes, nums = yolo(img)
+        t2 = time.time()
+        print('time: {}'.format(t2 - t1))
 
-            # print('detections:')
-            for i in range(nums[0]):
-                '''
-                print('\t{}, {}, {}'.format(class_names[int(classes[0][i])],
-                                                np.array(scores[0][i]),
-                                                np.array(boxes[0][i])))
-                '''
-                if class_names[int(classes[0][i])] in unallowed_class_names:
-                    x1y1 = ((np.array(boxes[0][i][0:2]) * original_size).astype(np.int32)).tolist()
-                    wh = ((np.array(boxes[0][i][2:4]) * original_size).astype(np.int32)).tolist() - x1y1
-                    objects.append({
-                        "label": class_names[int(classes[0][i])],
-                        "confidence": float("{0:.2f}".format(np.array(scores[0][i])*100)),
-                        "x": x1y1[0],
-                        "y": x1y1[1],
-                        "w": wh[0],
-                        "h": wh[1]
-                    })
-            response.append({
-                "image": image_names[j],
-                "detections": objects
-            })
-            save_image(raw_img, num, (boxes, scores, classes, nums))
-        #remove temporary images
-        for name in image_names:
-            os.remove(name)
+        # print('detections:')
+        for i in range(nums[0]):
+            '''
+            print('\t{}, {}, {}'.format(class_names[int(classes[0][i])],
+                                            np.array(scores[0][i]),
+                                            np.array(boxes[0][i])))
+            '''
+            if class_names[int(classes[0][i])] in unallowed_class_names:
+                x1y1 = ((np.array(boxes[0][i][0:2]) * original_size).astype(np.int32))
+                x2y2 = ((np.array(boxes[0][i][2:4]) * original_size).astype(np.int32))
+                xy = x1y1.tolist()
+                wh = (x2y2 - x1y1).tolist()
+                objects.append({
+                    "label": class_names[int(classes[0][i])],
+                    "confidence": float("{0:.2f}".format(np.array(scores[0][i])*100)),
+                    "x": xy[0],
+                    "y": xy[1],
+                    "w": wh[0],
+                    "h": wh[1]
+                })
+
+        save_image(raw_img, num, (boxes, scores, classes, nums))
+
+        #remove temporary image
+
+        os.remove(image_name)
         
         try:
-            return jsonify(response), 200
+            return jsonify(objects), 200
         except FileNotFoundError:
             abort(404)
         
