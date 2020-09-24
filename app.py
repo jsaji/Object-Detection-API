@@ -84,13 +84,15 @@ def get_detections():
                                                 np.array(boxes[0][i])))
                 '''
                 if class_names[int(classes[0][i])] in unallowed_class_names:
-                    x1y1 = ((np.array(boxes[0][i][0:2]) * original_size).astype(np.int32))
-                    x2y2 = ((np.array(boxes[0][i][2:4]) * original_size).astype(np.int32))
+                    x1y1 = ((np.array(boxes[0][i][0:2]) * original_size).astype(np.int32)).tolist()
+                    wh = ((np.array(boxes[0][i][2:4]) * original_size).astype(np.int32)).tolist() - x1y1
                     objects.append({
-                        "class": class_names[int(classes[0][i])],
+                        "label": class_names[int(classes[0][i])],
                         "confidence": float("{0:.2f}".format(np.array(scores[0][i])*100)),
-                        "box_top_left_corner": x1y1.tolist(),
-                        "box_width_height": (x2y2-x1y1).tolist()
+                        "x": x1y1[0],
+                        "y": x1y1[1],
+                        "w": wh[0],
+                        "h": wh[1]
                     })
             response.append({
                 "image": image_names[j],
@@ -128,13 +130,13 @@ def get_image():
         t2 = time.time()
         
         print('time: {}'.format(t2 - t1))
-
+        '''
         print('detections:')
         for i in range(nums[0]):
             print('\t{}, {}, {}'.format(class_names[int(classes[0][i])],
                                             np.array(scores[0][i]),
                                             np.array(boxes[0][i])))
-
+        '''
         img = save_image(img_raw, 0, (boxes, scores, classes, nums), return_img=True)
         # prepare image for response
         _, img_encoded = cv2.imencode('.png', img)
