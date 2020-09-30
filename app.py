@@ -65,7 +65,7 @@ def get_detections():
         boxes, scores, classes, nums = yolo(img)
         t2 = time.time()
         print('time: {}'.format(t2 - t1))
-
+        person_count = 0
         # print('detections:')
         for i in range(nums[0]):
             '''
@@ -78,6 +78,8 @@ def get_detections():
                 x2y2 = ((np.array(boxes[0][i][2:4]) * original_size).astype(np.int32))
                 xy = x1y1.tolist()
                 wh = (x2y2 - x1y1).tolist()
+                if class_names[int(classes[0][i])] == 'Person':
+                    person_count += 1
                 objects.append({
                     "label": class_names[int(classes[0][i])],
                     "confidence": float("{0:.2f}".format(np.array(scores[0][i])*100)),
@@ -94,7 +96,8 @@ def get_detections():
         os.remove(image_name)
         
         try:
-            return jsonify(objects), 200
+            objects.append({})
+            return jsonify({'objects':objects,'person_count':person_count}), 200
         except FileNotFoundError:
             abort(404)
         
