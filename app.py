@@ -96,7 +96,6 @@ def get_detections():
         os.remove(image_name)
         
         try:
-            objects.append({})
             return jsonify({'objects':objects,'person_count':person_count}), 200
         except FileNotFoundError:
             abort(404)
